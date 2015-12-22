@@ -1,17 +1,17 @@
+# Este es un archivo de pruebas de Marc Ronquillo
+
 import sys, os
 from qgis.core import *
-#from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 QgsApplication.setPrefixPath("/usr/bin", True)
 app= QgsApplication([],True)
 QgsApplication.initQgis()
 
-from os.path import expanduser
-home=expanduser("~")
+#from os.path import expanduser
+#home=expanduser("~")
 
 sys.path.append(r"/home/postpro/.qgis2/python/plugins")
-#import processing
 
 from processing.core.Processing import Processing
 Processing.initialize()
