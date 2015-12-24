@@ -1,9 +1,15 @@
-# Bulk: Clase que se define como un grupo de parcelas. Seinicializa con un raster ya cortado y el shape que define las parcelas que aparecen en el mismo. Contiene metodos para el procesado de las imagenes que lo definen
+#title           :Bulk.py
+#description     :Clase que se define como un grupo de parcelas. Se inicializa con un raster ya 
+#			 	  cortado y el shape que define las parcelas que aparecen en el mismo. 
+#				  Contiene metodos para el procesado de las imagenes que lo definen
+#author          :EC - MR
+#date            :20151224
+#version         :0.1
+#usage           :python Bulk.py
+#notes           :
+#==============================================================================
 
-
-# TODO Generar los imports necesarios para trabajar con raster y shape
-# Marc Ronquillo. 
-#Aqui empiezan los imports necesarios
+#Imports para emplear el modulo processing de QGIS
 
 import sys, os
 from qgis.core import *
@@ -19,8 +25,12 @@ from processing.core.Processing import Processing
 Processing.initialize()
 import processing.tools as proctools
 
-#Aqui terminan los imports necesarios
 
+#Imports para procesado de rasters
+
+from Raster_processing.raster_processing import basic_processing
+
+#Final de los imports
 
 class Bulk:
 
@@ -50,20 +60,22 @@ class Bulk:
 
 		#Basic Processing (RGB, )
 
-		[RGB, PCD, Zonificado] = basicProcessing(raster,shape)
+		[RGB, PCD, Zonificado] = basic_processing(raster,shape)
+
+		print RGB	
 
 
 
+raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/2015-08-03T10_16_35Z_BGREN_Vuelo-1.tif"
 
-
-raster = "/path/B1/raster"
 shape = "/path/B1/shape"
 
 Bulk1 = Bulk(raster,shape)
 
+Bulk1.process_raster()
 
 
-
-
+print "Program is finished"
+QgsApplication.exitQgis()
 
 

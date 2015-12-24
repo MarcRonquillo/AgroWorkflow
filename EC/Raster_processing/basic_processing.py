@@ -20,8 +20,13 @@ def basic_processing(raster, shape):
 	pathPCD=get_path(raster,"PCD")
 	pathZonificado=get_path(raster,"Zonificado")
 
+	output = [pathRGB, pathPCD, pathZonificado]
+
+	print output
+
 	return output
 
 def get_path(raster, file):
 	pathSlash=raster.split("/")
+	return pathSlash
 

@@ -26,39 +26,12 @@ from PyQt4.QtCore import QFileInfo,QSettings
 
 arguments=[]
 
-def band_split(pathIn,pathOut):
-
-	fileInfo=QFileInfo(pathIn)
-	baseName=fileInfo.baseName()
-	layer=QgsRasterLayer(pathIn, baseName)
-
-	if not layer.isValid():
-		print "fail"
-
-	numBands=layer.bandCount()
-	i=1
-	entries=[]
-	
-	while(i<=numBands):
-		band = QgsRasterCalculatorEntry()
-		band.ref = "band@"+str(i)
-		band.raster=layer
-		band.bandNumber=i
-		entries.append(band)
-
-		calc=QgsRasterCalculator(band.ref, pathOut+baseName+"band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
-		calc.processCalculation()
-		i=i+1
-
 def main():
 	global arguments
 	for arg in sys.argv:
 		arguments.append(arg)
 	print (str(arguments))
 
-	pathIn="/media/sf_shared_folder_centos/gdal/2015-08-03T10_16_35Z_BGREN_Vuelo-1.tif"
-	pathOut="/media/sf_shared_folder_centos/gdal/"
-	band_split(pathIn,pathOut)	
 
 
 
