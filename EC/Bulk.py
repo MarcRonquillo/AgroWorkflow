@@ -62,7 +62,7 @@ class Bulk:
 
 		[RGB, PCD, Zonificado] = basic_processing(raster,shape)
 
-		print RGB	
+			
 
 
 

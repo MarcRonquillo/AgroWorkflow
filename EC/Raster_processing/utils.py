@@ -76,9 +76,38 @@ def split_bands(pathIn,pathOut):
 		band.bandNumber=i
 		entries.append(band)
 
-		#calc=QgsRasterCalculator(band.ref, pathOut+baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
-		#calc.processCalculation()
+		operation = "("+band.ref+"=-32768)"
+
+		# Saves the current band as a separate file
+		calc=QgsRasterCalculator(band.ref, pathOut+baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
+		calc.processCalculation()
 		
 		output.append(pathOut+baseName+"_band_"+str(i)+".tif")
 		i=i+1
+	return output
+
+
+def reclass_16_to_8(rasterPath):
+
+	# Divide the raster path
+	pathSlash=rasterPath.split("/")
+	# Generate the folder path and the filename
+	rasterFolderPath = "/".join(pathSlash[0:-1],)
+	filename = "".join(pathSlash[-1],)
+	splitName = filename.split(".")
+	baseName = "".join(splitName[0],)
+	fileType = "".join(splitName[-1],)
+
+	reclass_table = "/media/sf_shared_folder_centos/Reclass_16_to8.txt"
+
+	layer = QgsRasterLayer(rasterPath, baseName)
+
+	extent = str(layer.extent().xMinimum()) + "," + str(layer.extent().xMaximum()) + "," + str(layer.extent().yMinimum()) + "," + str(layer.extent().yMaximum())
+
+	print extent
+
+	output = rasterFolderPath + "/" + baseName + "_8bits.tif"
+
+	proctools.general.runalg("grass:r.recode",rasterPath,reclass_table,False,extent,0,output)
+
 	return output

@@ -23,8 +23,12 @@ from processing.core.Processing import Processing
 Processing.initialize()
 import processing.tools as proctools
 
+# Imports de GDAL
 
-# Otros imports
+#sys.path.append("/usr/bin")
+#import gdal_merge
+
+# Imports de herramientas propias
 
 from utils import *
 
@@ -44,7 +48,14 @@ def basic_processing(raster, shape):
 	[blue,green,red,redEdge,nir] = split_bands(raster,bulkPath+"/40_Archivos_intermedios/")
 
 	# Generate the RGB composite and downgrade it to 8 bits
-	proctools.general.runalg("gdalogr:merge", red+";"+green+";"+blue,False,True,5,pathRGB)
+
+	red_8b = reclass_16_to_8(red)
+	blue_8b = reclass_16_to_8(blue)
+	green_8b = reclass_16_to_8(green)
+
+	os.system("gdal_merge.py -v -separate -o " + pathRGB + " -ot Byte -n 255 -a_nodata 255 "+ red_8b + " " + green_8b + " " + blue_8b)
+	#os.system("gdal_translate -scale 0 32768 0 254 -a_nodata 0 -stats -ot Byte /media/sf_shared_folder_centos/RGB_gdal.tif /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
+	#os.system("rm /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
 
 
 	# Generate the Plant Cell Density index
