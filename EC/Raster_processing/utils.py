@@ -25,6 +25,10 @@ from processing.core.Processing import Processing
 Processing.initialize()
 import processing.tools as proctools
 
+# GDAL para informacion del raster
+
+import gdal
+
 #Raster Calculator
 
 from qgis.analysis import QgsRasterCalculator, QgsRasterCalculatorEntry
@@ -36,7 +40,7 @@ from PyQt4.QtCore import QFileInfo,QSettings
 
 
 
-def get_general_paths(rasterPath):
+def get_general_paths(rasterPath): # Solo funciona si le das el mosaico inicial!!
 	# Divide the raster path
 	pathSlash=rasterPath.split("/")
 	# Generate the general paths
@@ -63,7 +67,7 @@ def split_bands(pathIn,pathOut):
 	layer=QgsRasterLayer(pathIn, baseName)
 
 	if not layer.isValid():
-		print "fail"
+		print "Error importing Micasense Mosaic to spit"
 
 	numBands=layer.bandCount()
 	i=1
@@ -76,18 +80,16 @@ def split_bands(pathIn,pathOut):
 		band.bandNumber=i
 		entries.append(band)
 
-		operation = "("+band.ref+"=-32768)"
-
 		# Saves the current band as a separate file
-		calc=QgsRasterCalculator(band.ref, pathOut+baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
-		calc.processCalculation()
+		#calc=QgsRasterCalculator(band.ref, pathOut+baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
+		#calc.processCalculation()
 		
 		output.append(pathOut+baseName+"_band_"+str(i)+".tif")
 		i=i+1
 	return output
 
 
-def reclass_16_to_8(rasterPath):
+def reclass_to_8(rasterPath,tablesPath):
 
 	# Divide the raster path
 	pathSlash=rasterPath.split("/")
@@ -98,16 +100,53 @@ def reclass_16_to_8(rasterPath):
 	baseName = "".join(splitName[0],)
 	fileType = "".join(splitName[-1],)
 
-	reclass_table = "/media/sf_shared_folder_centos/Reclass_16_to8.txt"
+	rasterPath = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/2015-08-03T10_16_35Z_BGREN_Vuelo-1.tif"
+
+	raster = gdal.Open(rasterPath)
+
+	band = raster.GetRasterBand(1)
+
+	stats = band.GetStatistics(True,True)
+
+	total_range = stats[1] - stats[0]
+
+	tablePath = tablesPath + "/" + baseName + "_reclass_table.txt"
+
+	reclass_table = create_reclass_table(tablePath,total_range)
 
 	layer = QgsRasterLayer(rasterPath, baseName)
 
 	extent = str(layer.extent().xMinimum()) + "," + str(layer.extent().xMaximum()) + "," + str(layer.extent().yMinimum()) + "," + str(layer.extent().yMaximum())
-
-	print extent
 
 	output = rasterFolderPath + "/" + baseName + "_8bits.tif"
 
 	proctools.general.runalg("grass:r.recode",rasterPath,reclass_table,False,extent,0,output)
 
 	return output
+
+
+def create_reclass_table(tablePath,total_range):
+
+
+	prueba = open(tablePath,"w")
+
+	initial_value = float(0)
+
+
+	table = ""
+
+	for i in range(255):
+		A = initial_value
+		B = A + (float(total_range)/255)
+		C = i
+
+		fila = [A,B,C]
+
+		table = table + ":".join(map(str,fila),) + "\n"
+
+		initial_value = B
+
+	prueba.write(table)
+	prueba.close
+
+	return tablePath

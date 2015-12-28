@@ -23,14 +23,14 @@ from processing.core.Processing import Processing
 Processing.initialize()
 import processing.tools as proctools
 
-# Imports de GDAL
-
-#sys.path.append("/usr/bin")
-#import gdal_merge
-
 # Imports de herramientas propias
 
 from utils import *
+
+#Raster Calculator
+
+from qgis.analysis import QgsRasterCalculator, QgsRasterCalculatorEntry
+from PyQt4.QtCore import QFileInfo,QSettings
 
 # Final de los imports
 
@@ -48,10 +48,10 @@ def basic_processing(raster, shape):
 	[blue,green,red,redEdge,nir] = split_bands(raster,bulkPath+"/40_Archivos_intermedios/")
 
 	# Generate the RGB composite and downgrade it to 8 bits
-
-	red_8b = reclass_16_to_8(red)
-	blue_8b = reclass_16_to_8(blue)
-	green_8b = reclass_16_to_8(green)
+	'''
+	red_8b = reclass_to_8(red,bulkPath + "/40_Archivos_intermedios/reclass_tables")
+	blue_8b = reclass_to_8(blue,bulkPath + "/40_Archivos_intermedios/reclass_tables")
+	green_8b = reclass_to_8(green,bulkPath + "/40_Archivos_intermedios/reclass_tables")
 
 	os.system("gdal_merge.py -v -separate -o " + pathRGB + " -ot Byte -n 255 -a_nodata 255 "+ red_8b + " " + green_8b + " " + blue_8b)
 	#os.system("gdal_translate -scale 0 32768 0 254 -a_nodata 0 -stats -ot Byte /media/sf_shared_folder_centos/RGB_gdal.tif /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
@@ -59,11 +59,71 @@ def basic_processing(raster, shape):
 
 
 	# Generate the Plant Cell Density index
+	'''
+	pathPCD = calculate_PCD(red,nir)
+
 
 	output = [pathRGB, pathPCD, pathZonificado]
 
 
 	return output
 
+def calculate_PCD(red,nir):
 
+
+	# Obtain file information and create the layers
+
+	redInfo=QFileInfo(red)
+	nirInfo=QFileInfo(nir)
+	redBaseName="red_reflectance.tif"
+	nirBaseName="nir_reflectance.tif"
+	folderPath = redInfo.absolutePath()
+	redReflectancePath = folderPath + "/" + redBaseName
+	nirReflectancePath = folderPath + "/" + nirBaseName
+
+	print redReflectancePath
+	print nirReflectancePath
+
+	redLayer = QgsRasterLayer(red,"red_band")
+
+	if not redLayer.isValid():
+		print "Error importing red band to calculate reflectances"
+
+	nirLayer = QgsRasterLayer(nir,"nir_band")
+	
+	if not nirLayer.isValid():
+		print "Error importing NIR band to calculate reflectances"
+
+
+	# The images are transformed into reflectances by dividing by 32768
+
+	entries=[]
+
+	redReflectance = QgsRasterCalculatorEntry()
+	redReflectance.ref = "red_band"
+	redReflectance.raster=redLayer
+	entries.append(redReflectance)
+
+	# Converts the DN raster into a reflectance raster
+	calc=QgsRasterCalculator(redReflectance.ref, redReflectancePath,"GTiff",redLayer.extent(),redLayer.width(),redLayer.height(), entries)
+	calc.processCalculation()
+
+	nirReflectance = QgsRasterCalculatorEntry()
+	nirReflectance.ref = "nir_band"
+	nirReflectance.raster=nirLayer
+	entries.append(nirReflectance)
+	'''
+	# Converts the DN raster into a reflectance raster
+	calc=QgsRasterCalculator('float(' + nirReflectance.ref + ')/32768', nirReflectancePath,"GTiff",nirLayer.extent(),nirLayer.width(),nirLayer.height(), entries)
+	calc.processCalculation()
+
+	# Calculate the PCD index
+	
+	calc=QgsRasterCalculator("float(" + nirReflectance.ref + ")/32768", nirReflectance,"GTiff",layer.extent(),layer.width(),layer.height(), entries)
+	calc.processCalculation()
+	'''
+
+	pcdPath = ""
+
+	return pcdPath
 
