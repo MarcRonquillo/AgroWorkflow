@@ -41,13 +41,10 @@ class Bulk:
 		self.raster = raster
 		self.shape = shape
 		self.attributes = self.get_attributes()
-		print self.attributes
 
 	def get_attributes(self):
 		
 		# TODO Read the shape and the associated attribute table
-
-		print raster
 
 		attributes = raster.split("/")
 
@@ -60,13 +57,14 @@ class Bulk:
 
 		#Basic Processing (RGB, )
 
+		print "Basic processing has started"
 		[RGB, PCD, Zonificado] = basic_processing(raster,shape)
-
+		print "Basic processing has ended"
 			
 
 
 
-raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/2015-08-03T10_16_35Z_BGREN_Vuelo-1.tif"
+raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/Vuelo_1.tif"
 
 shape = "/path/B1/shape"
 

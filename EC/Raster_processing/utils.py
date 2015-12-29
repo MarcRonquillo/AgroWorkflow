@@ -67,7 +67,9 @@ def split_bands(pathIn,pathOut):
 	layer=QgsRasterLayer(pathIn, baseName)
 
 	if not layer.isValid():
-		print "Error importing Micasense Mosaic to spit"
+		print "Error importing Micasense Mosaic to split"
+
+	print "Splitting bands from " + baseName
 
 	numBands=layer.bandCount()
 	i=1
@@ -100,7 +102,7 @@ def reclass_to_8(rasterPath,tablesPath):
 	baseName = "".join(splitName[0],)
 	fileType = "".join(splitName[-1],)
 
-	rasterPath = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/2015-08-03T10_16_35Z_BGREN_Vuelo-1.tif"
+	print "Reclassifying " + baseName + " into 8 bits"
 
 	raster = gdal.Open(rasterPath)
 
@@ -109,6 +111,8 @@ def reclass_to_8(rasterPath,tablesPath):
 	stats = band.GetStatistics(True,True)
 
 	total_range = stats[1] - stats[0]
+
+	print tablesPath
 
 	tablePath = tablesPath + "/" + baseName + "_reclass_table.txt"
 
