@@ -64,7 +64,7 @@ class Bulk:
 
 
 
-raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/Vuelo_1.tif"
+raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/B1.tif"
 
 shape = "/path/B1/shape"
 

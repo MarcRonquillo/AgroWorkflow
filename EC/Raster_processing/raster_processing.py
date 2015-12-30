@@ -48,7 +48,7 @@ def basic_processing(raster, shape):
 	[blue,green,red,redEdge,nir] = split_bands(raster,bulkPath+"/40_Archivos_intermedios/")
 
 	# Generate the RGB composite and downgrade it to 8 bits
-	'''
+	
 	print "Generating RGB Composite"
 	red_8b = reclass_to_8(red,bulkPath + "/40_Archivos_intermedios/reclass_tables")
 	blue_8b = reclass_to_8(blue,bulkPath + "/40_Archivos_intermedios/reclass_tables")
@@ -58,10 +58,15 @@ def basic_processing(raster, shape):
 	#os.system("gdal_translate -scale 0 32768 0 254 -a_nodata 0 -stats -ot Byte /media/sf_shared_folder_centos/RGB_gdal.tif /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
 	#os.system("rm /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
 	print "RGB Composite is available at " + pathRGB
-	'''
+	
 	# Generate the Plant Cell Density index
 	
-	pathPCD = calculate_PCD(red,nir,bulkPath)
+	calculate_PCD(red,nir,pathPCD)
+
+
+	# Generate the Zonification
+
+	dose_map(pathPCD)
 
 
 	output = [pathRGB, pathPCD, pathZonificado]
@@ -69,7 +74,37 @@ def basic_processing(raster, shape):
 
 	return output
 
-def calculate_PCD(red,nir,bulkPath):
+
+def dose_map(pathPCD,pathZonificado):
+
+
+	# Open the PCD as a layer
+
+	pcdLayer = QgsRasterLayer(pcd,"PCD")
+
+	if not pcdLayer.isValid():
+		print "Error importing red band to calculate reflectances"	
+
+
+	# Generate random points in the PCD extent
+
+	proctools.runalg("qgis:randompointsinextent",extent, point_number, None, )
+
+
+	# Get raster values to points
+
+	# Select the points with value higher than 0
+
+	# Do the kriging WITH THE PCD EXTENT!!
+
+	# Smooth the result
+
+	# Cut the raster and save the result
+
+
+
+
+def calculate_PCD(red,nir,pcdPath):
 
 
 	# Obtain file information and create the layers
@@ -119,14 +154,8 @@ def calculate_PCD(red,nir,bulkPath):
 	calc.processCalculation()
 
 	# Calculate the PCD index
-	
-	pcdPath = bulkPath + "/30_Indices_reales/PCD_raw.tif"
 
 	calc=QgsRasterCalculator("float(" + nirReflectance.ref + ")/float(" + redReflectance.ref + ")", pcdPath,"GTiff",nirLayer.extent(),nirLayer.width(),nirLayer.height(), entries)
 	calc.processCalculation()
 	
-
-	
-
-	return pcdPath
 
