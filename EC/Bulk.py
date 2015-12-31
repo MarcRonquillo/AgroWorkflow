@@ -35,18 +35,18 @@ from Raster_processing.raster_processing import basic_processing
 class Bulk:
 
 
-
 	def __init__(self, raster,shape):
 
 		self.raster = raster
 		self.shape = shape
+		self.paths = self.get_general_paths()
 		self.attributes = self.get_attributes()
 
 	def get_attributes(self):
 		
 		# TODO Read the shape and the associated attribute table
 
-		attributes = raster.split("/")
+		attributes = []
 
 		return attributes
 
@@ -58,9 +58,41 @@ class Bulk:
 		#Basic Processing (RGB, )
 
 		print "Basic processing has started"
-		[RGB, PCD, Zonificado] = basic_processing(raster,shape)
+		self.paths = basic_processing(self)
+
 		print "Basic processing has ended"
 			
+		return self.paths
+
+	def get_general_paths(self): # Solo funciona si le das el mosaico inicial!!
+		# Divide the raster path
+		pathSlash=self.raster.split("/")
+
+		# Generate the general paths
+		projectPath = "/".join(pathSlash[0:-5],)
+		bulkPath = "/".join(pathSlash[0:-2],)
+		rasterFolderPath = "/".join(pathSlash[0:-1],)
+		shapeFolderPath = bulkPath + "/20_Shape"
+		indexFolderPath = bulkPath + "/30_Indices_reales"
+		interFolderPath = bulkPath + "/40_Archivos_intermedios"
+		tablesPath = interFolderPath + "/reclass_tables"
+		# Generate the path of the files
+
+		rgbPath = rasterFolderPath + "/RGB.tif"
+		pcdPath = indexFolderPath + "/PCD_raw.tif"
+		pcd8bPath = indexFolderPath + "/PCD.tif"
+		zonificationPath = indexFolderPath + "/PCD_zonificado_raw.tif"
+		zonification8bPath = indexFolderPath + "/PCD_zonificado.tif"
+
+		paths = {"project" : projectPath, "bulk" : bulkPath , "rasterFolder" : rasterFolderPath ,"shapeFolder" : shapeFolderPath, "indexFolder" : indexFolderPath ,
+		 "interFolder" : interFolderPath, "tables" : tablesPath, "rgb" : rgbPath, "pcd" : pcdPath,
+		  "pcd8b" : pcd8bPath, "zonification" : zonificationPath, "zonification8b" : zonification8bPath}
+		
+	
+		return paths
+
+
+
 
 
 
@@ -70,8 +102,9 @@ shape = "/path/B1/shape"
 
 Bulk1 = Bulk(raster,shape)
 
-Bulk1.process_raster()
+Bulk1.paths = Bulk1.process_raster()
 
+print Bulk1.paths["blue"]
 
 print "Program is finished"
 QgsApplication.exitQgis()

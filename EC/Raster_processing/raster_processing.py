@@ -35,63 +35,66 @@ from PyQt4.QtCore import QFileInfo,QSettings
 # Final de los imports
 
 
-def basic_processing(raster, shape):
-	output=[]
-	# Generate the general paths
-	[rasterFolderPath,bulkPath,projectPath] = get_general_paths(raster)
-
-	pathRGB = bulkPath + "/10_Raster/RGB.tif"
-	pathPCD = bulkPath + "/30_Indices_reales/PCD_raw.tif"
-	pathZonificado = bulkPath + "/30_Indices_reales/PCD_zonificado_raw.tif"
+def basic_processing(bulk):
 
 	# Divide the bands to process them separately
-	[blue,green,red,redEdge,nir] = split_bands(raster,bulkPath+"/40_Archivos_intermedios/")
+	[bulk.paths["blue"],bulk.paths["green"],bulk.paths["red"],bulk.paths["redEdge"],bulk.paths["nir"]] = split_bands(bulk.raster,bulk.paths["interFolder"])
 
+	
+	'''
 	# Generate the RGB composite and downgrade it to 8 bits
 	
 	print "Generating RGB Composite"
-	red_8b = reclass_to_8(red,bulkPath + "/40_Archivos_intermedios/reclass_tables")
-	blue_8b = reclass_to_8(blue,bulkPath + "/40_Archivos_intermedios/reclass_tables")
-	green_8b = reclass_to_8(green,bulkPath + "/40_Archivos_intermedios/reclass_tables")
+	red_8b = reclass_to_8(bulk.paths["red"],bulk.paths["tables"])
+	blue_8b = reclass_to_8(bulk.paths["blue"],bulk.paths["tables"])
+	green_8b = reclass_to_8(bulk.paths["green"],bulk.paths["tables"])
 
-	os.system("gdal_merge.py -v -separate -o " + pathRGB + " -ot Byte -n 255 -a_nodata 255 "+ red_8b + " " + green_8b + " " + blue_8b)
+	os.system("gdal_merge.py -v -separate -o " + bulk.paths["rgb"] + " -ot Byte -n 255 -a_nodata 255 "+ red_8b + " " + green_8b + " " + blue_8b)
 	#os.system("gdal_translate -scale 0 32768 0 254 -a_nodata 0 -stats -ot Byte /media/sf_shared_folder_centos/RGB_gdal.tif /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
 	#os.system("rm /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
-	print "RGB Composite is available at " + pathRGB
+	print "RGB Composite is available at " + bulk.paths["rgb"]
 	
 	# Generate the Plant Cell Density index
 	
-	calculate_PCD(red,nir,pathPCD)
-
+	calculate_PCD(bulk.paths["red"],bulk.paths["nir"],bulk.paths["pcd"])
+	'''
 
 	# Generate the Zonification
 
-	dose_map(pathPCD)
+
+	dose_map(bulk.paths["pcd"],bulk.paths["zonification"],bulk.paths["interFolder"] + "/rndm_pts.shp")
 
 
-	output = [pathRGB, pathPCD, pathZonificado]
+	return bulk.paths
 
 
-	return output
-
-
-def dose_map(pathPCD,pathZonificado):
+def dose_map(pathPCD,pathZonificado,pathPuntos):
 
 
 	# Open the PCD as a layer
 
-	pcdLayer = QgsRasterLayer(pcd,"PCD")
+	pcdLayer = QgsRasterLayer(pathPCD,"PCD")
 
 	if not pcdLayer.isValid():
 		print "Error importing red band to calculate reflectances"	
 
+	extent = str(pcdLayer.extent().xMinimum()) + "," + str(pcdLayer.extent().xMaximum()) + "," + str(pcdLayer.extent().yMinimum()) + "," + str(pcdLayer.extent().yMaximum())	
+	
+	print extent
+
 
 	# Generate random points in the PCD extent
 
-	proctools.runalg("qgis:randompointsinextent",extent, point_number, None, )
-
+	#proctools.general.runalg("qgis:randompointsinextent",extent,50000,0,pathZonificado) - NO FUNCIONA SIN iface
+	#proctools.general.runalg("grass:v.random",50000,0,0,"z",False,extent,1,pathPuntos) -  mismo error..
 
 	# Get raster values to points
+
+	#proctools.general.runalg("saga:addgridvaluestopoints",pathPuntos,pathPCD,0,"/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/40_Archivos_intermedios/puntos_valores.shp") - NO genera output alguno...ni en QGIS!
+
+	proctools.general.runalg("grass:v.sample",pathPuntos,"ID",pathPCD,1,False,False,extent,-1,0.0001,0,"/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/40_Archivos_intermedios/puntos_valores.shp")
+
+	print "-------------------------------------------"
 
 	# Select the points with value higher than 0
 
