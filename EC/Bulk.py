@@ -76,6 +76,8 @@ class Bulk:
 		indexFolderPath = bulkPath + "/30_Indices_reales"
 		interFolderPath = bulkPath + "/40_Archivos_intermedios"
 		tablesPath = interFolderPath + "/reclass_tables"
+
+
 		# Generate the path of the files
 
 		rgbPath = rasterFolderPath + "/RGB.tif"
@@ -84,11 +86,19 @@ class Bulk:
 		zonificationPath = indexFolderPath + "/PCD_zonificado_raw.tif"
 		zonification8bPath = indexFolderPath + "/PCD_zonificado.tif"
 
+		# Generate the path of the intermediate files
+
+		pointsPath = interFolderPath + "/points.shp"
+		pointsValuesPath = interFolderPath + "/points_values.shp"
+		krigingPath = interFolderPath + "/kriging.sdat"
+		smoothKrigingPath = interFolderPath + "/smoothed_kriging.tif"
+
+
 		paths = {"project" : projectPath, "bulk" : bulkPath , "rasterFolder" : rasterFolderPath ,"shapeFolder" : shapeFolderPath, "indexFolder" : indexFolderPath ,
-		 "interFolder" : interFolderPath, "tables" : tablesPath, "rgb" : rgbPath, "pcd" : pcdPath,
-		  "pcd8b" : pcd8bPath, "zonification" : zonificationPath, "zonification8b" : zonification8bPath}
+		 "interFolder" : interFolderPath, "tables" : tablesPath, "rgb" : rgbPath, "pcd" : pcdPath, "pcd8b" : pcd8bPath, "zonification" : zonificationPath, 
+		 "zonification8b" : zonification8bPath, "points" : pointsPath, "pointsValues" : pointsValuesPath, "kriging" : krigingPath, "smoothKriging" : smoothKrigingPath }
 		
-	
+
 		return paths
 
 
@@ -98,7 +108,7 @@ class Bulk:
 
 raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/10_Raster/B1.tif"
 
-shape = "/path/B1/shape"
+shape = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/20_Shape/B1.shp"
 
 Bulk1 = Bulk(raster,shape)
 

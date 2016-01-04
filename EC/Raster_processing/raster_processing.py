@@ -40,8 +40,8 @@ def basic_processing(bulk):
 	# Divide the bands to process them separately
 	[bulk.paths["blue"],bulk.paths["green"],bulk.paths["red"],bulk.paths["redEdge"],bulk.paths["nir"]] = split_bands(bulk.raster,bulk.paths["interFolder"])
 
-	
-	'''
+	print "Bands succesfully splitted"
+
 	# Generate the RGB composite and downgrade it to 8 bits
 	
 	print "Generating RGB Composite"
@@ -57,18 +57,16 @@ def basic_processing(bulk):
 	# Generate the Plant Cell Density index
 	
 	calculate_PCD(bulk.paths["red"],bulk.paths["nir"],bulk.paths["pcd"])
-	'''
-
+	
 	# Generate the Zonification
 
-
-	dose_map(bulk.paths["pcd"],bulk.paths["zonification"],bulk.paths["interFolder"] + "/rndm_pts.shp")
+	dose_map(bulk.paths["pcd"], bulk.shape, bulk.paths["zonification"], bulk.paths["points"], bulk.paths["pointsValues"], bulk.paths["kriging"], bulk.paths["smoothKriging"])
 
 
 	return bulk.paths
 
 
-def dose_map(pathPCD,pathZonificado,pathPuntos):
+def dose_map(pathPCD,pathShape,pathZonificado,pathPuntos,pathPuntosValores,pathKriging,pathSmoothKriging):
 
 
 	# Open the PCD as a layer
@@ -76,36 +74,49 @@ def dose_map(pathPCD,pathZonificado,pathPuntos):
 	pcdLayer = QgsRasterLayer(pathPCD,"PCD")
 
 	if not pcdLayer.isValid():
-		print "Error importing red band to calculate reflectances"	
+		print "Error importing PCD"	
 
 	extent = str(pcdLayer.extent().xMinimum()) + "," + str(pcdLayer.extent().xMaximum()) + "," + str(pcdLayer.extent().yMinimum()) + "," + str(pcdLayer.extent().yMaximum())	
 	
 	print extent
 
 
+	print pathPuntos
+	print pathPuntosValores
+	print pathKriging
+
+
 	# Generate random points in the PCD extent
 
-	#proctools.general.runalg("qgis:randompointsinextent",extent,50000,0,pathZonificado) - NO FUNCIONA SIN iface
-	#proctools.general.runalg("grass:v.random",50000,0,0,"z",False,extent,1,pathPuntos) -  mismo error..
+	#proctools.general.runalg("qgis:randompointsinextent",extent,50000,0,pathPuntos)
+	#proctools.general.runalg("grass:v.random",50000,0,0,"z",False,extent,0,pathPuntos)
 
 	# Get raster values to points
 
 	#proctools.general.runalg("saga:addgridvaluestopoints",pathPuntos,pathPCD,0,"/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/40_Archivos_intermedios/puntos_valores.shp") - NO genera output alguno...ni en QGIS!
 
-	proctools.general.runalg("grass:v.sample",pathPuntos,"ID",pathPCD,1,False,False,extent,-1,0.0001,0,"/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/40_Archivos_intermedios/puntos_valores.shp")
+	proctools.general.runalg("grass:v.sample",pathPuntos,"z",pathPCD,1,False,False,extent,-1,0.0001,0,pathPuntosValores)
 
-	print "-------------------------------------------"
+	print "Points succesfully generated"
 
-	# Select the points with value higher than 0
+	# Select the points with value higher than 0 (Done automatically by the grass:sample algorithm)
 
 	# Do the kriging WITH THE PCD EXTENT!!
 
+	proctools.general.runalg("saga:ordinarykriging",pathPuntosValores,"rast_val",0,False,True,100,-1,100,1,"a + b * x",0,1000,0,4,20,0,extent,1,0,None,pathKriging,None)
+
+	print "Kriging generated"
+
 	# Smooth the result
 
+	os.system("otbcli_Smoothing -in " + pathKriging + " -out " + pathSmoothKriging + " -type gaussian -type.gaussian.radius 5")
+	
+	print "Kriging smoothed"
+
 	# Cut the raster and save the result
-
-
-
+	os.system("gdalwarp -q -of GTiff -dstnodata 0 -tr 1.0 -1.0 -tap -cutline " + pathShape + " -crop_to_cutline " + pathSmoothKriging + " " +pathZonificado)
+	
+	print "PCD Zonification created succesfully"
 
 def calculate_PCD(red,nir,pcdPath):
 
@@ -161,4 +172,4 @@ def calculate_PCD(red,nir,pcdPath):
 	calc=QgsRasterCalculator("float(" + nirReflectance.ref + ")/float(" + redReflectance.ref + ")", pcdPath,"GTiff",nirLayer.extent(),nirLayer.width(),nirLayer.height(), entries)
 	calc.processCalculation()
 	
-
+	print "PCD calculated"

@@ -62,8 +62,8 @@ def split_bands(pathIn,pathOut):
 		entries.append(band)
 
 		# Saves the current band as a separate file
-		#calc=QgsRasterCalculator(band.ref, pathOut+ "/" +baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
-		#calc.processCalculation()
+		calc=QgsRasterCalculator(band.ref, pathOut+ "/" +baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
+		calc.processCalculation()
 		
 		output.append(pathOut+"/"+baseName+"_band_"+str(i)+".tif")
 		i=i+1
