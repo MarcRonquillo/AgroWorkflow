@@ -43,12 +43,13 @@ def basic_processing(bulk):
 	print "Bands succesfully splitted"
 
 	# Generate the RGB composite and downgrade it to 8 bits
-	
+	'''
 	print "Generating RGB Composite"
-	red_8b = reclass_to_8(bulk.paths["red"],bulk.paths["tables"])
-	blue_8b = reclass_to_8(bulk.paths["blue"],bulk.paths["tables"])
-	green_8b = reclass_to_8(bulk.paths["green"],bulk.paths["tables"])
+	red_8b = reclass_to_8("red",bulk.paths["red"],bulk.paths["tables"])
+	blue_8b = reclass_to_8("blue",bulk.paths["blue"],bulk.paths["tables"])
+	green_8b = reclass_to_8("green",bulk.paths["green"],bulk.paths["tables"])
 
+	
 	os.system("gdal_merge.py -v -separate -o " + bulk.paths["rgb"] + " -ot Byte -n 255 -a_nodata 255 "+ red_8b + " " + green_8b + " " + blue_8b)
 	#os.system("gdal_translate -scale 0 32768 0 254 -a_nodata 0 -stats -ot Byte /media/sf_shared_folder_centos/RGB_gdal.tif /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
 	#os.system("rm /media/sf_shared_folder_centos/RGB_gdal_16b.tif")
@@ -61,6 +62,15 @@ def basic_processing(bulk):
 	# Generate the Zonification
 
 	dose_map(bulk.paths["pcd"], bulk.shape, bulk.paths["zonification"], bulk.paths["points"], bulk.paths["pointsValues"], bulk.paths["kriging"], bulk.paths["smoothKriging"])
+	'''
+
+	# Transform the PCD and the zonification into 8 bits 
+
+	pcd_8b = reclass_to_8("PCD",bulk.paths["pcd"],bulk.paths["tables"],bulk.paths["pcd8b"])
+
+	zonification_8b = reclass_to_8("PCD",bulk.paths["zonification"],bulk.paths["tables"],bulk.paths["zonification8b"])
+
+
 
 
 	return bulk.paths

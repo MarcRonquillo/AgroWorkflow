@@ -62,46 +62,65 @@ def split_bands(pathIn,pathOut):
 		entries.append(band)
 
 		# Saves the current band as a separate file
-		calc=QgsRasterCalculator(band.ref, pathOut+ "/" +baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
-		calc.processCalculation()
+		#calc=QgsRasterCalculator(band.ref, pathOut+ "/" +baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
+		#calc.processCalculation()
 		
 		output.append(pathOut+"/"+baseName+"_band_"+str(i)+".tif")
 		i=i+1
 	return output
 
 
-def reclass_to_8(rasterPath,tablesPath):
-
-	# Divide the raster path
-	pathSlash=rasterPath.split("/")
-	# Generate the folder path and the filename
-	rasterFolderPath = "/".join(pathSlash[0:-1],)
-	filename = "".join(pathSlash[-1],)
-	splitName = filename.split(".")
-	baseName = "".join(splitName[0],)
-	fileType = "".join(splitName[-1],)
+def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 
 	print "Reclassifying " + baseName + " into 8 bits"
 
-	raster = gdal.Open(rasterPath)
+	# Divide the raster path
+	pathSlash=rasterPath.split("/")
 
-	band = raster.GetRasterBand(1)
+	# Generate the folder
+	rasterFolderPath = "/".join(pathSlash[0:-1],)
 
-	stats = band.GetStatistics(True,True)
+	# Create the table path
+	tablePath = tablesPath + "/" + baseName + ".txt"
 
-	total_range = stats[1] - stats[0]
 
-	print tablesPath
+	# If the user does not give any output path, it's created automatically
+	if reclassifiedRasterPath == "":
 
-	tablePath = tablesPath + "/" + baseName + "_reclass_table.txt"
+		reclassifiedRasterPath = rasterFolderPath + "/" + baseName + "_8bits.tif"
 
-	reclass_table = create_reclass_table(tablePath,total_range)
+	# Create a reclassification table if it's necessary
+
+	if not os.path.isfile(tablePath):
+
+		print "This table does not exist. Creating new reclsssifying table: " + tablePath
+
+		raster = gdal.Open(rasterPath)
+
+		band = raster.GetRasterBand(1)
+
+		stats = band.GetStatistics(True,True)
+
+		total_range = stats[1] - stats[0]
+
+
+		tablePath = tablesPath + "/" + baseName + ".txt"
+
+		reclass_table = create_reclass_table(tablePath,total_range)
+
+	else:
+
+		print "Table already exists: " + tablePath
+
+		reclass_table = tablePath
+
+	# Get the extent of the raster and reclassify it
 
 	layer = QgsRasterLayer(rasterPath, baseName)
 
 	extent = str(layer.extent().xMinimum()) + "," + str(layer.extent().xMaximum()) + "," + str(layer.extent().yMinimum()) + "," + str(layer.extent().yMaximum())
 
-	output = rasterFolderPath + "/" + baseName + "_8bits.tif"
+	output = reclassifiedRasterPath
 
 	proctools.general.runalg("grass:r.recode",rasterPath,reclass_table,False,extent,0,output)
 

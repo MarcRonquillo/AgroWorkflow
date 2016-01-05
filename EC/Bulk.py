@@ -35,10 +35,11 @@ from Raster_processing.raster_processing import basic_processing
 class Bulk:
 
 
-	def __init__(self, raster,shape):
+	def __init__(self, index,raster,shape):
 
 		self.raster = raster
 		self.shape = shape
+		self.index = index
 		self.paths = self.get_general_paths()
 		self.attributes = self.get_attributes()
 
@@ -76,15 +77,16 @@ class Bulk:
 		indexFolderPath = bulkPath + "/30_Indices_reales"
 		interFolderPath = bulkPath + "/40_Archivos_intermedios"
 		tablesPath = interFolderPath + "/reclass_tables"
+		deliverablesPath = projectPath + "/30_Entregables/B" + str(self.index)
 
 
 		# Generate the path of the files
 
-		rgbPath = rasterFolderPath + "/RGB.tif"
+		rgbPath = deliverablesPath + "/RGB.tif"
 		pcdPath = indexFolderPath + "/PCD_raw.tif"
-		pcd8bPath = indexFolderPath + "/PCD.tif"
+		pcd8bPath = deliverablesPath + "/PCD.tif"
 		zonificationPath = indexFolderPath + "/PCD_zonificado_raw.tif"
-		zonification8bPath = indexFolderPath + "/PCD_zonificado.tif"
+		zonification8bPath = deliverablesPath + "/PCD_zonificado.tif"
 
 		# Generate the path of the intermediate files
 
@@ -94,7 +96,7 @@ class Bulk:
 		smoothKrigingPath = interFolderPath + "/smoothed_kriging.tif"
 
 
-		paths = {"project" : projectPath, "bulk" : bulkPath , "rasterFolder" : rasterFolderPath ,"shapeFolder" : shapeFolderPath, "indexFolder" : indexFolderPath ,
+		paths = {"project" : projectPath, "bulk" : bulkPath , "deliverables" : deliverablesPath, "rasterFolder" : rasterFolderPath ,"shapeFolder" : shapeFolderPath, "indexFolder" : indexFolderPath ,
 		 "interFolder" : interFolderPath, "tables" : tablesPath, "rgb" : rgbPath, "pcd" : pcdPath, "pcd8b" : pcd8bPath, "zonification" : zonificationPath, 
 		 "zonification8b" : zonification8bPath, "points" : pointsPath, "pointsValues" : pointsValuesPath, "kriging" : krigingPath, "smoothKriging" : smoothKrigingPath }
 		
@@ -110,11 +112,10 @@ raster = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/1
 
 shape = "/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/20_Shape/B1.shp"
 
-Bulk1 = Bulk(raster,shape)
+Bulk1 = Bulk(1,raster,shape)
 
 Bulk1.paths = Bulk1.process_raster()
 
-print Bulk1.paths["blue"]
 
 print "Program is finished"
 QgsApplication.exitQgis()
