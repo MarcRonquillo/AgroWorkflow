@@ -43,7 +43,7 @@ def basic_processing(bulk):
 	print "Bands succesfully splitted"
 
 	# Generate the RGB composite and downgrade it to 8 bits
-	'''
+	
 	print "Generating RGB Composite"
 	red_8b = reclass_to_8("red",bulk.paths["red"],bulk.paths["tables"])
 	blue_8b = reclass_to_8("blue",bulk.paths["blue"],bulk.paths["tables"])
@@ -62,7 +62,7 @@ def basic_processing(bulk):
 	# Generate the Zonification
 
 	dose_map(bulk.paths["pcd"], bulk.shape, bulk.paths["zonification"], bulk.paths["points"], bulk.paths["pointsValues"], bulk.paths["kriging"], bulk.paths["smoothKriging"])
-	'''
+	
 
 	# Transform the PCD and the zonification into 8 bits 
 
@@ -90,20 +90,12 @@ def dose_map(pathPCD,pathShape,pathZonificado,pathPuntos,pathPuntosValores,pathK
 	
 	print extent
 
-
-	print pathPuntos
-	print pathPuntosValores
-	print pathKriging
-
-
 	# Generate random points in the PCD extent
 
 	#proctools.general.runalg("qgis:randompointsinextent",extent,50000,0,pathPuntos)
 	#proctools.general.runalg("grass:v.random",50000,0,0,"z",False,extent,0,pathPuntos)
 
 	# Get raster values to points
-
-	#proctools.general.runalg("saga:addgridvaluestopoints",pathPuntos,pathPCD,0,"/media/sf_shared_folder_centos/20_Generacion_Entregables/10_Bulks/B1/40_Archivos_intermedios/puntos_valores.shp") - NO genera output alguno...ni en QGIS!
 
 	proctools.general.runalg("grass:v.sample",pathPuntos,"z",pathPCD,1,False,False,extent,-1,0.0001,0,pathPuntosValores)
 

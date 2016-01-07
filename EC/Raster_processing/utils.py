@@ -104,6 +104,15 @@ def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 		total_range = stats[1] - stats[0]
 
 
+		if baseName == "PCD":
+
+			if total_range>20:
+
+				total_range = 20
+
+		
+
+
 		tablePath = tablesPath + "/" + baseName + ".txt"
 
 		reclass_table = create_reclass_table(tablePath,total_range)
