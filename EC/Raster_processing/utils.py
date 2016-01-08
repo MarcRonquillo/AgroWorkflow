@@ -62,8 +62,8 @@ def split_bands(pathIn,pathOut):
 		entries.append(band)
 
 		# Saves the current band as a separate file
-		#calc=QgsRasterCalculator(band.ref, pathOut+ "/" +baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
-		#calc.processCalculation()
+		calc=QgsRasterCalculator(band.ref, pathOut+ "/" +baseName+"_band_"+str(i)+".tif","GTiff",layer.extent(),layer.width(),layer.height(), entries)
+		calc.processCalculation()
 		
 		output.append(pathOut+"/"+baseName+"_band_"+str(i)+".tif")
 		i=i+1
@@ -103,6 +103,11 @@ def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 
 		total_range = stats[1] - stats[0]
 
+		print str(stats[0])
+
+		print str(stats[1])
+
+		print str(total_range)
 
 		if baseName == "PCD":
 
@@ -115,7 +120,7 @@ def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 
 		tablePath = tablesPath + "/" + baseName + ".txt"
 
-		reclass_table = create_reclass_table(tablePath,total_range)
+		reclass_table = create_reclass_table(tablePath,total_range,stats[0])
 
 	else:
 
@@ -136,12 +141,12 @@ def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 	return output
 
 
-def create_reclass_table(tablePath,total_range):
+def create_reclass_table(tablePath,total_range,initial_value):
 
 
 	prueba = open(tablePath,"w")
 
-	initial_value = float(0)
+	initial_value = float(initial_value)
 
 
 	table = ""

@@ -65,11 +65,12 @@ def basic_processing(bulk):
 	
 
 	# Transform the PCD and the zonification into 8 bits 
-
+	
 	pcd_8b = reclass_to_8("PCD",bulk.paths["pcd"],bulk.paths["tables"],bulk.paths["pcd8b"])
 
 	zonification_8b = reclass_to_8("PCD",bulk.paths["zonification"],bulk.paths["tables"],bulk.paths["zonification8b"])
-
+	
+	
 
 
 
@@ -86,26 +87,35 @@ def dose_map(pathPCD,pathShape,pathZonificado,pathPuntos,pathPuntosValores,pathK
 	if not pcdLayer.isValid():
 		print "Error importing PCD"	
 
-	extent = str(pcdLayer.extent().xMinimum()) + "," + str(pcdLayer.extent().xMaximum()) + "," + str(pcdLayer.extent().yMinimum()) + "," + str(pcdLayer.extent().yMaximum())	
-	
-	print extent
+	rasterExtent = str(pcdLayer.extent().xMinimum()) + "," + str(pcdLayer.extent().xMaximum()) + "," + str(pcdLayer.extent().yMinimum()) + "," + str(pcdLayer.extent().yMaximum())	
+
 
 	# Generate random points in the PCD extent
 
-	#proctools.general.runalg("qgis:randompointsinextent",extent,50000,0,pathPuntos)
-	#proctools.general.runalg("grass:v.random",50000,0,0,"z",False,extent,0,pathPuntos)
+
+	shapeLayer = QgsVectorLayer(pathShape, "pol", "ogr")
+
+	if not shapeLayer.isValid():
+		print "Error importing PCD"	
+
+	shapeExtent = str(shapeLayer.extent().xMinimum()) + "," + str(shapeLayer.extent().xMaximum()) + "," + str(shapeLayer.extent().yMinimum()) + "," + str(shapeLayer.extent().yMaximum())	
+	
+
+	#proctools.general.runalg("qgis:randompointsinlayerbounds",shapeLayer,30000,0,pathPuntos)
+
+	proctools.general.runalg("qgis:randompointsinsidepolygonsfixed",shapeLayer,1,0.5,0,pathPuntos)
 
 	# Get raster values to points
 
-	proctools.general.runalg("grass:v.sample",pathPuntos,"z",pathPCD,1,False,False,extent,-1,0.0001,0,pathPuntosValores)
+	proctools.general.runalg("grass:v.sample",pathPuntos,"id",pathPCD,1,False,False,rasterExtent,-1,0.0001,0,pathPuntosValores)
 
 	print "Points succesfully generated"
-
+	
 	# Select the points with value higher than 0 (Done automatically by the grass:sample algorithm)
 
 	# Do the kriging WITH THE PCD EXTENT!!
-
-	proctools.general.runalg("saga:ordinarykriging",pathPuntosValores,"rast_val",0,False,True,100,-1,100,1,"a + b * x",0,1000,0,4,20,0,extent,1,0,None,pathKriging,None)
+	
+	proctools.general.runalg("saga:ordinarykriging",pathPuntosValores,"rast_val",0,False,True,100,-1,100,1,"a + b * x",0,1000,0,4,20,0,rasterExtent,1,0,None,pathKriging,None)
 
 	print "Kriging generated"
 
@@ -119,7 +129,7 @@ def dose_map(pathPCD,pathShape,pathZonificado,pathPuntos,pathPuntosValores,pathK
 	os.system("gdalwarp -q -of GTiff -dstnodata 0 -tr 1.0 -1.0 -tap -cutline " + pathShape + " -crop_to_cutline " + pathSmoothKriging + " " +pathZonificado)
 	
 	print "PCD Zonification created succesfully"
-
+	
 def calculate_PCD(red,nir,pcdPath):
 
 
