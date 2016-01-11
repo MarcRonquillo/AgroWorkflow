@@ -28,7 +28,7 @@ import processing.tools as proctools
 
 #Imports para procesado de rasters
 
-from Raster_processing.raster_processing import basic_processing
+from Raster_processing.raster_processing import basic_processing, target_sectors, variability_map
 
 #Final de los imports
 
@@ -59,9 +59,14 @@ class Bulk:
 		#Basic Processing (RGB, )
 
 		print "Basic processing has started"
+
 		self.paths = basic_processing(self)
 
 		print "Basic processing has ended"
+
+		self.paths = target_sectors(self)
+
+		self.paths = variability_map(self)
 			
 		return self.paths
 
@@ -77,16 +82,23 @@ class Bulk:
 		indexFolderPath = bulkPath + "/30_Indices_reales"
 		interFolderPath = bulkPath + "/40_Archivos_intermedios"
 		tablesPath = interFolderPath + "/reclass_tables"
-		deliverablesPath = projectPath + "/30_Entregables/B" + str(self.index)
+		colorRampsPaths = interFolderPath + "/color_ramps"
+		APDeliverablesPath = projectPath + "/30_Entregables_AP/B" + str(self.index)
+		VNDeliverablesPath = projectPath + "/40_Entregables_VN/B" + str(self.index)
 
 
 		# Generate the path of the files
 
-		rgbPath = deliverablesPath + "/RGB.tif"
+		rgbPath = APDeliverablesPath + "/RGB.tif"
+		rgbVNPath = VNDeliverablesPath + "/RGB.tif"
+
 		pcdPath = indexFolderPath + "/PCD_raw.tif"
-		pcd8bPath = deliverablesPath + "/PCD.tif"
+		pcd8bPath = APDeliverablesPath + "/PCD.tif"
+		pcdVNPath = VNDeliverablesPath + "/PCD.tif"
+
 		zonificationPath = indexFolderPath + "/PCD_zonificado_raw.tif"
-		zonification8bPath = deliverablesPath + "/PCD_zonificado.tif"
+		zonification8bPath = APDeliverablesPath + "/PCD_zonificado.tif"
+		zonificationVNPath = VNDeliverablesPath + "/PCD_zonificado.tif"
 
 		# Generate the path of the intermediate files
 
@@ -96,9 +108,9 @@ class Bulk:
 		smoothKrigingPath = interFolderPath + "/smoothed_kriging.tif"
 
 
-		paths = {"project" : projectPath, "bulk" : bulkPath , "deliverables" : deliverablesPath, "rasterFolder" : rasterFolderPath ,"shapeFolder" : shapeFolderPath, "indexFolder" : indexFolderPath ,
-		 "interFolder" : interFolderPath, "tables" : tablesPath, "rgb" : rgbPath, "pcd" : pcdPath, "pcd8b" : pcd8bPath, "zonification" : zonificationPath, 
-		 "zonification8b" : zonification8bPath, "points" : pointsPath, "pointsValues" : pointsValuesPath, "kriging" : krigingPath, "smoothKriging" : smoothKrigingPath }
+		paths = {"project" : projectPath, "bulk" : bulkPath , "APDeliverables" : APDeliverablesPath, "VNDeliverables" : VNDeliverablesPath, "rasterFolder" : rasterFolderPath ,"shapeFolder" : shapeFolderPath, "indexFolder" : indexFolderPath ,
+		 "interFolder" : interFolderPath, "tables" : tablesPath, "colorRamps" : colorRampsPaths, "rgb" : rgbPath, "rgbVN" : rgbVNPath, "pcd" : pcdPath, "pcd8b" : pcd8bPath, "pcdVN" : pcdVNPath, "zonification" : zonificationPath, 
+		 "zonification8b" : zonification8bPath, "zonificationVN" : zonificationVNPath, "points" : pointsPath, "pointsValues" : pointsValuesPath, "kriging" : krigingPath, "smoothKriging" : smoothKrigingPath }
 		
 
 		return paths

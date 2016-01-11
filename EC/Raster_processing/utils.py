@@ -93,21 +93,22 @@ def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 
 	if not os.path.isfile(tablePath):
 
-		print "This table does not exist. Creating new reclsssifying table: " + tablePath
+		print "This table does not exist. Creating new reclasssifying table: " + tablePath
 
-		raster = gdal.Open(rasterPath)
 
-		band = raster.GetRasterBand(1)
+		rasterLayer = QgsRasterLayer(rasterPath,"raster")
 
-		stats = band.GetStatistics(True,True)
+		dp = rasterLayer.dataProvider()
+		stats = dp.bandStatistics(1)
 
-		total_range = stats[1] - stats[0]
+		rasterMax = stats.maximumValue
+		rasterMin = stats.minimumValue
 
-		print str(stats[0])
+		total_range = rasterMax - rasterMin
 
-		print str(stats[1])
+		rasterMin = rasterMin - (total_range/1000)
+		rasterMax = rasterMax + (total_range/1000)
 
-		print str(total_range)
 
 		if baseName == "PCD":
 
@@ -120,7 +121,7 @@ def reclass_to_8(baseName,rasterPath,tablesPath,reclassifiedRasterPath = ""):
 
 		tablePath = tablesPath + "/" + baseName + ".txt"
 
-		reclass_table = create_reclass_table(tablePath,total_range,stats[0])
+		reclass_table = create_reclass_table(tablePath,total_range,rasterMin)
 
 	else:
 

@@ -63,18 +63,209 @@ def basic_processing(bulk):
 
 	dose_map(bulk.paths["pcd"], bulk.shape, bulk.paths["zonification"], bulk.paths["points"], bulk.paths["pointsValues"], bulk.paths["kriging"], bulk.paths["smoothKriging"])
 	
-
-	# Transform the PCD and the zonification into 8 bits 
+	
+	# Transform the PCD and the zonification into 8 bits (AP Deliverables) 
 	
 	pcd_8b = reclass_to_8("PCD",bulk.paths["pcd"],bulk.paths["tables"],bulk.paths["pcd8b"])
 
 	zonification_8b = reclass_to_8("PCD",bulk.paths["zonification"],bulk.paths["tables"],bulk.paths["zonification8b"])
 	
+	# Apply color to the PCD and the zonification (VN Deliverables) and copy the RGB
 	
+	os.system("cp " + bulk.paths["rgb"] + " " + bulk.paths["rgbVN"])
 
+	pcdVN = applyColor(bulk.paths["pcd8b"],bulk.paths["interFolder"],bulk.paths["pcdVN"],bulk.paths["colorRamps"], "PCD")
+
+	zonificationVN = applyColor(bulk.paths["zonification8b"], bulk.paths["interFolder"], bulk.paths["zonificationVN"],bulk.paths["colorRamps"], "Zonification")
 
 
 	return bulk.paths
+
+
+def target_sectors(bulk):
+
+	# Create the intermediate and final paths
+
+	targetSectorsNC = bulk.paths["interFolder"] + "/target_sectors_NC.tif"
+
+	targetSectors = bulk.paths["VNDeliverables"] + "/Target_Sectors.tif"
+
+	bulk.paths["shapeStatistics"] = create_statistics(bulk.shape, bulk.paths["pcd8b"], bulk.paths["shapeFolder"])
+
+	os.system("gdal_rasterize -a pcd_mean -a_nodata 255 -tr 1.0 1.0 -l statistics " + bulk.paths["shapeStatistics"] + " " + targetSectorsNC)
+
+	applyColor(targetSectorsNC,bulk.paths["interFolder"],targetSectors,bulk.paths["colorRamps"],"Target_Sectors")
+
+
+	return bulk.paths
+
+def variability_map(bulk):
+
+	# Create the intermediate and final paths
+
+	variabilityMapNC = bulk.paths["interFolder"] + "/variability_map_NC.tif"
+
+	variabilityMap = bulk.paths["VNDeliverables"] + "/Variability_Map.tif"
+
+	bulk.paths["shapeStatistics"] = create_statistics(bulk.shape, bulk.paths["pcd8b"], bulk.paths["shapeFolder"])
+
+	os.system("gdal_rasterize -a pcd_std -a_nodata 255 -tr 1.0 1.0 -l statistics " + bulk.paths["shapeStatistics"] + " " + variabilityMapNC)
+
+	applyColor(variabilityMapNC,bulk.paths["interFolder"],variabilityMap,bulk.paths["colorRamps"],"Variability_Map")
+	
+
+	return bulk.paths
+
+
+
+def create_statistics(shapePath, indexPath, shapeFolderPath):
+
+	shapeStatistics = shapeFolderPath + "/statistics.shp"
+
+	if not os.path.isfile(shapeStatistics):
+
+		# Create the vector layer to run the algorithm
+
+		shapeLayer = QgsVectorLayer(shapePath, "shape", "ogr")
+
+		# Generate the statistics
+
+		print "Calculating Zonal Statistics"
+
+		proctools.general.runalg('qgis:zonalstatistics',indexPath,1,shapeLayer, "pcd_",True,shapeStatistics)
+
+	else:
+
+		print "Zonal Statistics exist already"
+
+	return shapeStatistics
+
+
+
+def createColorRamp(classes, rasterMin, rasterMax, colorRampPath):
+
+
+	# Open the txt ramp file
+
+	txt = open(colorRampPath,"w")
+
+	ramp = ""
+
+	if classes == 5: # Blue - Light Blue - Green - Yellow - Red
+
+		ran = (rasterMax -rasterMin)/classes
+
+		ramp = str(rasterMax) + " 0 0 254 \n" + str(rasterMax-ran) + " 51 194 254 \n" + str(rasterMax-2*ran) + " 182 254 143 \n" + str(rasterMax-3*ran) + " 254 200 0 \n" + str(rasterMax-4*ran) + " 254 0 0 \n" + "nv 255 255 255"
+	
+	if classes == 4:
+
+		ran = (rasterMax -rasterMin)/classes
+
+		ramp = str(rasterMax) + " 0 0 254 \n" + str(rasterMax-ran) + " 51 194 254 \n" + str(rasterMax-2*ran) + " 254 200 0 \n" + str(rasterMax-3*ran) + " 254 0 0 \n" + "nv 255 255 255"
+	
+	if classes == 3:
+
+		ran = (rasterMax -rasterMin)/classes
+
+		ramp = str(rasterMax) + " 157 204 16 \n" + str(rasterMax-ran) + " 199 227 113 \n" + str(rasterMax-2*ran) + " 236 252 204 \n" + "nv 255 255 255"
+
+
+	txt.write(ramp)
+	txt.close
+
+	return colorRampPath
+
+
+def applyColor(rasterPath,temporalRasterFolderPath,colouredRasterPath,colorRampsPath,deliverableType):
+
+	# Check the type of deliverable: Index (for PCD/Zonification), Target Sectors or Variability Map
+	if deliverableType == "PCD" or deliverableType == "Zonification":
+
+		# Create the layer to read max and min real values
+		rasterLayer = QgsRasterLayer(rasterPath,"raster")
+
+		dp = rasterLayer.dataProvider()
+		stats = dp.bandStatistics(1)
+
+		rasterMax = stats.maximumValue
+		rasterMin = stats.minimumValue
+
+		# Create the color ramp path
+
+		colorRampPath = colorRampsPath + "/" + deliverableType + ".txt"
+
+		# Create the color ramp
+
+		colorRamp = createColorRamp(5, rasterMin, rasterMax,colorRampPath)
+
+
+	elif deliverableType == "Target_Sectors":
+
+		# Create the layer to read max and min real values
+		rasterLayer = QgsRasterLayer(rasterPath,"raster")
+
+		dp = rasterLayer.dataProvider()
+		stats = dp.bandStatistics(1)
+
+		rasterMax = stats.maximumValue
+		rasterMin = stats.minimumValue
+
+		# Create the color ramp path
+
+		colorRampPath = colorRampsPath + "/" + deliverableType + ".txt"
+
+		# Create the color ramp
+
+		colorRamp = createColorRamp(4, rasterMin, rasterMax,colorRampPath)
+
+
+	elif deliverableType == "Variability_Map":
+
+		# Create the layer to read max and min real values
+		rasterLayer = QgsRasterLayer(rasterPath,"raster")
+
+		dp = rasterLayer.dataProvider()
+		stats = dp.bandStatistics(1)
+
+		rasterMax = stats.maximumValue
+		rasterMin = stats.minimumValue
+
+		# Create the color ramp path
+
+		colorRampPath = colorRampsPath + "/" + deliverableType + ".txt"
+
+		# Create the color ramp
+
+		colorRamp = createColorRamp(3, rasterMin, rasterMax,colorRampPath)
+
+
+	else:
+		print "Type of deliverable is not valid (applyColor)"
+
+
+
+
+	temporalRasterPath = temporalRasterFolderPath + "/temporal.tif"
+
+	# Delete the temporal file if it exists
+	if os.path.isfile(temporalRasterPath):
+
+		os.system("rm " + temporalRasterPath)
+
+	# Apply the color ramp 
+	
+	os.system("gdaldem color-relief " + rasterPath + " " + colorRamp + " " + temporalRasterPath)
+
+	# Add a NoData value to the raster
+
+	os.system("gdal_translate -a_nodata 255 -b 1 -b 2 -b 3 " + temporalRasterPath + " " + colouredRasterPath)
+	
+	# Delete the temporal file if it exists
+	if os.path.isfile(temporalRasterPath):
+
+		os.system("rm " + temporalRasterPath)
+
+	return colouredRasterPath
 
 
 def dose_map(pathPCD,pathShape,pathZonificado,pathPuntos,pathPuntosValores,pathKriging,pathSmoothKriging):
